@@ -157,31 +157,41 @@ fn get_event_queue(trj_a: &Trajectory, trj_b: &Trajectory, axis: usize) -> Vec<(
     while (i < trj_a.len()) & (j < trj_b.len()) {
         let a1 = &coords_a[i - 1];
         let a2 = &coords_a[i];
-        let b1 = &coords_b[i - 1];
-        let b2 = &coords_b[i];
-
-        if (a1.y..=a2.y).contains(&b1.y) {
-            events.push((b1.clone(), false));
-        }
-        if (b1.y..=b2.y).contains(&a1.y) {
-            events.push((a1.clone(), false));
-        }
-
+        let b1 = &coords_b[j - 1];
+        let b2 = &coords_b[j];
         let line_a = Line2D { start: a1, end: a2 };
         let line_b = Line2D { start: b1, end: b2 };
+        let inc_i;
+        let (fst, snd): (Coord2D, Coord2D);
+        if a1.y < b1.y {
+            fst = a1.clone();
+            snd = b1.clone();
+            i = if i == trj_a.len() { i } else { i + 1 };
+            inc_i = true;
+        } else {
+            fst = b1.clone();
+            snd = a1.clone();
+            j = if j == trj_b.len() { j } else { j + 1 };
+            inc_i = false;
+        };
         let ints = intersection_point(&line_a, &line_b);
         if let Some(ints) = ints {
-            events.push((ints, true))
-        }
-        if (a1.y..=a2.y).contains(&b2.y) {
-            print!("inc j");
-            j += 1;
-        }
-        if (b1.y..=b2.y).contains(&a2.y) {
-            print!("inc i");
-            i += 1;
+            if inc_i {
+                j = if j == trj_b.len() { j } else { j + 1 };
+            } else {
+                i = if i == trj_a.len() { i } else { i + 1 };
+            }
+            events.push((fst, false));
+            events.push((snd, false));
+            events.push((ints, true));
+        } else {
+            events.push((fst, false));
         }
     }
+    let end_a = &coords_a[i - 1];
+    let end_b = &coords_b[j - 1];
+    events.push((end_a.clone(), false));
+    events.push((end_b.clone(), false));
     events
 }
 
@@ -385,9 +395,6 @@ mod tradis_test {
     fn distance_test() {
         let trj_a: Trajectory = Trajectory::from_array((&TRJ_A).to_vec());
         let trj_b: Trajectory = Trajectory::from_array((&TRJ_B).to_vec());
-        let (start, end) = get_common_time_span(&trj_a, &trj_b).unwrap();
-        let trj_a = trj_a.trim(start, end);
-        let trj_b = trj_b.trim(start, end);
         let dist = distance(&trj_a, &trj_b).unwrap();
         assert!(dist > 0.0)
     }

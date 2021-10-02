@@ -15,9 +15,10 @@ fn rust_ext(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let trj_a = Trajectory::from_array(a);
         let trj_b = Trajectory::from_array(b);
         let dist = distance(&trj_a, &trj_b);
-        match dist {
-            Some(dist) => dist,
-            None => f64::NAN,
+        if let Some(dist) = dist {
+            dist
+        } else {
+            f64::NAN
         }
     }
 
@@ -50,6 +51,7 @@ fn rust_ext(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             .outer_iter()
             .map(|c| [c[0], c[1], c[2]])
             .collect::<Vec<[f64; 3]>>();
+
         let res: f64 = tradispy(trj_a, trj_b);
         PyFloat::new(py, res)
     }

@@ -1,0 +1,8 @@
+[project]
+name = "tradis"
+version = "0.1.6"
+description = "A measurement for the distance between trajectories"
+
+[build-system]
+requires = ["maturin>=0.11,<0.12"]
+build-backend = "maturin"
